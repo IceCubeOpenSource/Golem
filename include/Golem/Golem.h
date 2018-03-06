@@ -24,33 +24,42 @@ class Golem {
     typedef phys_tools::likelihood::LikelihoodProblem<std::reference_wrapper<const Event>, HistogramSet, DataWeighter, phys_tools::likelihood::detail::WeighterCollection<WeighterMaker, UncertaintyWeighter>, Prior, Likelihood, NParameters> LType;
 
     PhysicsModel model;
+    HistogramSet observationHistogram;
+    HistogramSet simulationHistogram;
     phys_tools::ParameterSet params;
     WeighterMaker WM;
+    UncertaintyWeighter UW;
     std::unique_ptr<LType> likelihoodProblem;
 
-    Golem(PhysicsModel model);
+    Golem(PhysicsModel model):model(model) {
+        observationHistogram = model.MakeHistogramSet();
+        simulationHistogram = model.MakeHistogramSet();
+        params = model.MakeParameterSet();
+        WM = model.MakeWeighterMaker();
+        UW = model.MakeUncertaintyWeighter();
+    }
 
     // Parameter functions
     phys_tools::ParameterSet & GetParameters();
     
-    //LLH functions
+    // LLH functions
     phys_tools::likelihoodPoint MinLLH() const;
     double EvalLLH(std::vector<double> params) const;
 
-    //Observation / Expectation functions
+    // Observation / Expectation functions
     void SetObservationEvents(std::deque<Event> events);
     void SetSimulationEvents(std::deque<Event> events);
     const std::deque<Event> & GetObservationEvents() const;
     const std::deque<Event> & GetSimulationEvents() const;
 
-    //Distribution functions
+    // Distribution functions
     HistogramSet GetExpectationDistribution(std::vector<double>) const;
     HistogramSet GetSimulationDistribution(std::vector<double>) const;
 
-    //Fun stuff
+    // Fun stuff
     //MakeHistogramOfArbitraryProperty(SomeHistogramType histogram, SomeParameterPointerType parameter_pointer)
 
-    //Test functions
+    // Test functions
     void SetUpAsimov();
     std::deque<Event> GetRealization(std::vector<double>) const;
 }
