@@ -25,7 +25,8 @@ class PhysicsModel {
         std::function<DataType(const Event&)> operator()(const std::vector<DataType>& params) const {
           assert(parameters.size() == NParameters);
           cachedValueWeighter<Event,DataType,double> w(Event::weight);
-          return w*params[0];
+          DataType normalization = p.extractParameter("normalization",parameters)
+          return w*normalization;
         }
     };
 
@@ -37,17 +38,35 @@ class PhysicsModel {
     };
 
     struct Prior {
+      const ParameterSet& p;
       phys_tools::likelihood::GaussianPrior normalization;
-      Prior(): normalization(1.,0.1) {}
+      Prior(const ParameterSet& p): p(p), normalization(1.,0.1){}
       template<typename DataType>
         DataType operator()(const std::vector<DataType>& parameters) const {
           assert(parameters.size() == NParameters);
-          return normalization(parameters[0]);;
+          return normalization(p.extractParameter("normalization",parameters));
         }
     };
 
     void AddEventToHistogram(HistogramSet& h, const Event& e) const {
       h.add(e.energy, cos(e.zenith), phys_tools::histograms::amount(std::cref(e)));
+    }
+
+    HistogramSet MakeHistogramSet() const {
+      using phys_tools::likelihood::entryStoringBin;
+      using HistType = phys_tools::histograms::histogram<2, entryStoringBin<std::reference_wrapper<const Event>>>;
+      LogarithmicAxis energy_axis(0,0.1);
+      LinearAxis cos_zenith_axis(0,0.1);
+      HistogramSet h = std::make_tuple(HistType(energy_axis,cos_zenith_axis));
+      return h;
+    }
+
+    phys_tools::ParameterSet MakeParameterSet() const {
+      phys_tools::ParameterSet parameters;
+      parameters.addParameter("normalization");
+      parameters.setParameterLowerLimit("normalization", 0);
+      parameters.setParameterValue("normalization", 1);
+      return parameters;
     }
 };
 
