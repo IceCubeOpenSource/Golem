@@ -46,7 +46,7 @@ public:
             observationHistogram(model.MakeHistogramSet()),
             simulationHistogram(model.MakeHistogramSet()),
             params(model.MakeParameterSet()),
-            WM(model.MakeWeighterMaker()),
+            WM(model.MakeWeighterMaker(params)),
             UW(model.MakeUncertaintyWeighter(),
             prior(model.MakePrior(params))) {
     }
