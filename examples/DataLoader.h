@@ -4,6 +4,8 @@
 #include <PhysTools/tableio.h>
 #include <LeptonWeighter/ParticleType.h>
 
+namespace analysis {
+
 class DataLoader {
   private:
     std::string simulation_data_path;
@@ -107,3 +109,7 @@ class DataLoader {
       return observation_events;
     }
 }
+
+} // namespace analysis
+
+#endif // GOLEM_EXAMPLE_DATA_LOADER_H

@@ -6,6 +6,8 @@
 #include "DataLoader.h"
 #include "PhysicsModel.h"
 
+namespace analysis {
+
 /// \brief Event Converter class.
 class EventConverter {
   private:
@@ -67,4 +69,6 @@ class EventConverter {
     }
 }
 
-#endif
+} // namespace analysis
+
+#endif // GOLEM_EXAMPLE_EVENT_CONVERTER_H

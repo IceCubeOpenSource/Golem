@@ -114,7 +114,7 @@ public:
         HistogramSet h = std::make_tuple(histogram<2>(energy_axis,cos_zenith_axis));
         return h;
     }
-    
+
     ///This function acts as an interface between our event type and our set of
     ///histograms: It defines how the propoerties stored in `Event` are used to
     ///select where that event belongs in the histogram(s). 
