@@ -18,21 +18,21 @@ protected:
     /// \brief Gets a data loader event and returns its weight.
     /// @param e_input Event from the data loader.
     /// \details Transfer properties from the DataLoader::Event to a LeptonWeighter::Event and apply the weighter.
-    double GetEventWeight(DataLoader::Event& e_input){
+    double GetEventWeight(DataLoader::Event& e){
         LW::Event lw_e {
-            e.primaryType,
-                e.final_state_particle_0,
-                e.final_state_particle_1,
-                e.intX,
-                e.intY,
-                e.primaryEnergy,
-                e.primaryAzimuth,
-                e.primaryZenith,
-                e.x,
-                e.y,
-                e.z,
-                e.r,
-                e.totalColumnDepth
+          e.primaryType,
+          e.final_state_particle_0,
+          e.final_state_particle_1,
+          e.interaction_x,
+          e.interaction_y,
+          e.primaryEnergy,
+          e.primaryAzimuth,
+          e.primaryZenith,
+          e.x,
+          e.y,
+          e.z,
+          e.radius,
+          e.total_column_depth
         };
         return weighter(lw_e);
     }

@@ -36,6 +36,8 @@ public:
         double interaction_y;
         double total_column_depth;
         double radius;
+        double x;
+        double y;
         double z;
     };
 
