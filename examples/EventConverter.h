@@ -8,44 +8,44 @@
 
 /// \brief Event Converter class.
 class EventConverter {
-  private:
+private:
     std::unique_ptr<LW::Weighter> weighter;
-  protected:
+protected:
     /// \brief Gets a data loader event and returns its weight.
     /// @param e_input Event from the data loader.
     /// \details Transfer properties from the DataLoader::Event to a LeptonWeighter::Event and apply the weighter.
     double GetEventWeight(DataLoader::Event& e_input){
-      LW::Event lw_e {
-        e.primaryType,
-        e.final_state_particle_0,
-        e.final_state_particle_1,
-        e.intX,
-        e.intY,
-        e.primaryEnergy,
-        e.primaryAzimuth,
-        e.primaryZenith,
-        e.x,
-        e.y,
-        e.z,
-        e.r,
-        e.totalColumnDepth
-      };
-      return weighter(lw_e);
+        LW::Event lw_e {
+            e.primaryType,
+                e.final_state_particle_0,
+                e.final_state_particle_1,
+                e.intX,
+                e.intY,
+                e.primaryEnergy,
+                e.primaryAzimuth,
+                e.primaryZenith,
+                e.x,
+                e.y,
+                e.z,
+                e.r,
+                e.totalColumnDepth
+        };
+        return weighter(lw_e);
     }
-  public:
+public:
     /// \brief Event converter constructor.
     /// @param path_to_lic_file Path to Lepton Injector Configuration (LIC) file.
     /// @param path_to_cross_sections Path to the folder where cross section splines are located.
     /// \details Generated the generator and cross section weighters, which then are assambled
     /// into the LeptonWeighter::Weighter.
     EventConverter(std::string path_to_lic_file, std::string path_to_cross_sections){
-      std::vector<std::shared_ptr<LW::Generator>> generators = LW::MakeGeneratorsFromLICFile(path_to_lic_file);
-      std::shared_ptr<LW::CrossSectionFromSpline> xs = std::make_shared<LW::CrossSectionFromSpline>(path_to_cross_sections + "/dsdxdy_nu_CC_iso.fits",
-                                                                                                    path_to_cross_sections + "/dsdxdy_nubar_CC_iso.fits",
-                                                                                                    path_to_cross_sections + "/dsdxdy_nu_NC_iso.fits",
-                                                                                                    path_to_cross_sections + "/dsdxdy_nubar_NC_iso.fits");
-      // Constructs and sets the weighter
-      weighter.reset(new LW::Weighter(xs,generators));
+        std::vector<std::shared_ptr<LW::Generator>> generators = LW::MakeGeneratorsFromLICFile(path_to_lic_file);
+        std::shared_ptr<LW::CrossSectionFromSpline> xs = std::make_shared<LW::CrossSectionFromSpline>(path_to_cross_sections + "/dsdxdy_nu_CC_iso.fits",
+                path_to_cross_sections + "/dsdxdy_nubar_CC_iso.fits",
+                path_to_cross_sections + "/dsdxdy_nu_NC_iso.fits",
+                path_to_cross_sections + "/dsdxdy_nubar_NC_iso.fits");
+        // Constructs and sets the weighter
+        weighter.reset(new LW::Weighter(xs,generators));
     }
 
     /// \brief Converts one data loader event structure to a physics model event structure.
@@ -56,14 +56,14 @@ class EventConverter {
     /// needs energy and zenith information. Additionally the weight is calculated by
     /// LeptonWeighter and store in the object.
     PhysicsModel::Event ConvertEvent(DataLoader::Event& e_input){
-      PhysicsModel::Event e_output;
+        PhysicsModel::Event e_output;
 
-      e_output.energy = e_input.energy;
-      e_output.zenith = e_input.zenith;
-      e_output.primaryEnergy = e_input.primaryEnergy;
-      e_output.primaryZenith = e_input.primaryZenith;
-      e_output.weight = GetEventWeight(e_input);
-      return e_output;
+        e_output.energy = e_input.energy;
+        e_output.zenith = e_input.zenith;
+        e_output.primaryEnergy = e_input.primaryEnergy;
+        e_output.primaryZenith = e_input.primaryZenith;
+        e_output.weight = GetEventWeight(e_input);
+        return e_output;
     }
 }
 
