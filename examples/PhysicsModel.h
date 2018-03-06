@@ -4,10 +4,18 @@
 class PhysicsModel {
 private:
 public:
+    ///The PhysicsModel constructor.
+    ///This might take properties that you want to build into your model, but 
+    ///this simple example doesn't have any. 
     PhysicsModel(){}
 
+    ///This is the number of parameters the model has.
     static constexpr unsigned int NParameters = 1;
 
+    ///This is the representaion of one observed or simulated event used for
+    ///fitting/evaluating this model. It should contain all of the observables
+    ///which are relevant to the model, and any information needed to compute
+    ///the weights needed to find the expectation for the model.
     struct Event {
         double primaryEnergy;
         double primaryZenith;
@@ -16,9 +24,18 @@ public:
         double weight;
     }
 
-    typedef std::tuple<
-        phys_tools::histograms::histogram<2, phys_tools::likelihood::entryStoringBin<std::reference_wrapper<const Event>>>
-        > HistogramSet;
+    ///This is a template alias for the general type of histograms we will use.
+    ///The only remaining template parameter is the number of dimensions 
+    ///(observables) the histogram will have.
+    template<unsigned int Dimension>
+    using histogram=phys_tools::histograms::histogram<Dimension, phys_tools::likelihood::entryStoringBin<std::reference_wrapper<const Event>>>;
+    
+    ///This type is the full collection of data histograms that will be used to
+    ///evaluate the model. There will be one HistogramSet for the observation
+    ///and one for the expectation. 
+    using HistogramSet = std::tuple<
+        histogram<2>
+        >;
 
     struct WeighterMaker {
         template<typename DataType>
