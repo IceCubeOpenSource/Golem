@@ -52,11 +52,29 @@ public:
     }
 
     // Parameter functions
-    phys_tools::ParameterSet & GetParameters();
+    phys_tools::ParameterSet & GetParameters() {
+        return params;
+    }
 
     // LLH functions
-    phys_tools::likelihoodPoint MinLLH() const;
-    double EvalLLH(std::vector<double> params) const;
+    phys_tools::likelihoodPoint MinLLH(double changeTolerance=1e-6, unsigned int historySize=5) const {
+        if(!likelihoodProblem)
+            throw std::runtime_error("LikelihoodProblem needs to exist before thread count can be set.");
+        phys_tools::lbfgsb::LBFGSB_Driver minimizer(params);
+        minimizer.setChangeTolerance(changeTolerance);
+        minimizer.setHistorySize(historySize);
+        minimizer.minimize(phys_tools::likelihood::BFGS_Function<LType>(likelihoodProblem));
+        phys_tools::likelihood::likelihoodPoint result;
+        result.likelihood = minimizer.minimumValue();
+        result.params = minimizer.minimumPosition();
+        return result;
+    }
+
+    double EvalLLH(std::vector<double> params) const {
+        if(!likelihoodProblem)
+            throw std::runtime_error("LikelihoodProblem needs to exist before thread count can be set.");
+        return -likelihoodProblem->evaluateLikelihood(params);
+    }
 
     // Observation / Expectation functions
     void SetObservationEvents(std::deque<Event> events) {
