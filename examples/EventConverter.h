@@ -1,6 +1,8 @@
 #ifndef GOLEM_EXAMPLE_EVENT_CONVERTER_H
 #define GOLEM_EXAMPLE_EVENT_CONVERTER_H
 
+#include <deque>
+#include <vector>
 #include <LeptonWeighter/Weighter.h>
 
 #include "DataLoader.h"

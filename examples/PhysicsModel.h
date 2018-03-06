@@ -1,6 +1,10 @@
 #ifndef GOLEM_EXAMPLE_PHYSICS_MODEL_H
 #define GOLEM_EXAMPLE_PHYSICS_MODEL_H
 
+#include <deque>
+#include <vector>
+#include <functional>
+
 namespace analysis {
 
 class PhysicsModel {
@@ -24,7 +28,7 @@ public:
         double energy;
         double zenith;
         double weight;
-    }
+    };
 
     ///This is the object which, given a particular set of model parameter values,
     ///makes an object which will weight the simulated events to that particular

@@ -1,10 +1,18 @@
 #ifndef GOLEM_EXAMPLE_DATA_LOADER_H
 #define GOLEM_EXAMPLE_DATA_LOADER_H
 
+#include <deque>
+#include <vector>
 #include <PhysTools/tableio.h>
 #include <LeptonWeighter/ParticleType.h>
+#include <hdf5.h>
+#include <hdf5_hl.h>
 
 namespace analysis {
+
+namespace {
+  herr_t collectTableNames(hid_t group_id, const char * member_name, void* operator_data);
+} // close namespace
 
 class DataLoader {
 private:
@@ -23,41 +31,44 @@ public:
         double azimuth;
         LW::ParticleType final_state_particle_0;
         LW::ParticleType final_state_particle_1;
-        LW::ParticleType initialType;
-        double finalStateX;
-        double finalStateY;
-        double totalColumnDepth;
+        LW::ParticleType primary_type;
+        double interaction_x;
+        double interaction_y;
+        double total_column_depth;
         double radius;
         double z;
-    }
+    };
+
+protected:
 
     template<typename CallbackType>
     void readFile(const std::string& filePath, CallbackType action){
-        H5File h5file(filePath);
+        using namespace phys_tools::cts;
+        phys_tools::tableio::H5File h5file(filePath);
         if(!h5file)
             throw std::runtime_error("Unable to open "+filePath);
         std::set<std::string> tables;
         H5Giterate(h5file,"/",NULL,&collectTableNames,&tables);
         if(tables.empty())
             throw std::runtime_error(filePath+" contains no tables");
-        std::map<RecordID,Event> intermediateData;
+        std::map<phys_tools::tableio::RecordID,Event> intermediateData;
 
-        using particle = TableRow<
-            field<double,CTS("totalEnergy")>,
-            field<double,CTS("zenith")>,
-            field<double,CTS("azimuth")>,
-            field<double,CTS("finalStateX")>,
-            field<double,CTS("finalStateY")>,
-            field<int,CTS("finalType1")>,
-            field<int,CTS("finalType2")>,
-            field<int,CTS("initialType")>,
-            field<double,CTS("totalColumnDepth")>,
-            field<double,CTS("radius")>,
-            field<double,CTS("z")>
+        using particle = phys_tools::tableio::TableRow<
+            phys_tools::tableio::field<double,CTS("totalEnergy")>,
+            phys_tools::tableio::field<double,CTS("zenith")>,
+            phys_tools::tableio::field<double,CTS("azimuth")>,
+            phys_tools::tableio::field<double,CTS("finalStateX")>,
+            phys_tools::tableio::field<double,CTS("finalStateY")>,
+            phys_tools::tableio::field<int,CTS("finalType1")>,
+            phys_tools::tableio::field<int,CTS("finalType2")>,
+            phys_tools::tableio::field<int,CTS("initialType")>,
+            phys_tools::tableio::field<double,CTS("totalColumnDepth")>,
+            phys_tools::tableio::field<double,CTS("radius")>,
+            phys_tools::tableio::field<double,CTS("z")>
                 >;
 
         if(tables.count("EventProperties")){
-            readTable<particle>(h5file, "EventProperties", intermediateData,
+          phys_tools::tableio::readTable<particle>(h5file, "EventProperties", intermediateData,
                     [](const particle& p, Event& e){
                     e.primaryEnergy=p.get<CTS("totalEnergy")>();
                     e.primaryZenith=p.get<CTS("zenith")>();
@@ -76,15 +87,15 @@ public:
                     });
         }
 
-        for(std::map<RecordID,Event>::value_type& item : intermediateData)
+        for(std::map<phys_tools::tableio::RecordID,Event>::value_type& item : intermediateData)
             action(item.first,item.second);
     }
-
+public:
     std::deque<Event> GetSimulationEvents(){
         std::deque<Event> simulation_events;
         try {
             readFile(simulation_data_path,
-                    [&](RecordID id, Event& e){
+                    [&](phys_tools::tableio::RecordID id, Event& e){
                     simulation_events.push_back(e);
                     }
                     );
@@ -98,7 +109,7 @@ public:
         std::deque<Event> observation_events;
         try {
             readFile(observation_data_path,
-                    [&](RecordID id, Event& e){
+                    [&](phys_tools::tableio::RecordID id, Event& e){
                     observation_events.push_back(e);
                     }
                     );
