@@ -10,14 +10,23 @@
 
 namespace golem {
 
-template<typename PhysicsModel>
+template<typename PhysicsModel, typedef Likelihood>
 class Golem {
-    PhysicsModel model;
-    phys_tools::ParameterSet params;
-
     typedef PhysicsModel::Event Event;
     typedef PhysicsModel::WeighterMaker WeighterMaker;
+    typedef PhysicsModel::UncertaintyWeighter UncertaintyWeighter;
     typedef PhysicsModel::HistogramSet HistogramSet;
+    typedef PhysicsModel::Prior Prior;
+    static constexpr unsigned int NParameters = PhysicsModel::NParameters;
+
+    typedef phys_tools::likelihood::SwitchableWeighter<phys_tools::likelihood::SimpleDataWeighter, decltype(WeighterMaker(std::vector<double>))> DataWeighter;
+
+    typedef phys_tools::likelihood::LikelihoodProblem<std::reference_wrapper<const Event>, HistogramSet, DataWeighter, phys_tools::likelihood::detail::WeighterCollection<WeighterMaker, UncertaintyWeighter>, Prior, Likelihood, NParameters> LType;
+
+    PhysicsModel model;
+    phys_tools::ParameterSet params;
+    WeighterMaker WM;
+    std::unique_ptr<LType> likelihoodProblem;
 
     Golem(PhysicsModel model);
 
