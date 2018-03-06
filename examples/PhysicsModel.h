@@ -1,5 +1,5 @@
-#ifndef __PHYSICS_MODEL_H_
-#define __PHYSICS_MODEL_H_
+#ifndef GOLEM_EXAMPLE_PHYSICS_MODEL_H
+#define GOLEM_EXAMPLE_PHYSICS_MODEL_H
 
 class PhysicsModel {
 private:
@@ -78,5 +78,4 @@ public:
     }
 };
 
-#endif
-
+#endif //GOLEM_EXAMPLE_PHYSICS_MODEL_H
