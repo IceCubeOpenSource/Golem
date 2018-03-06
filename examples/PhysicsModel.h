@@ -38,6 +38,7 @@ public:
         >;
 
     struct WeighterMaker {
+        WeighterMaker() {}
         template<typename DataType>
             std::function<DataType(const Event&)> operator()(const std::vector<DataType>& params) const {
                 assert(parameters.size() == NParameters);
@@ -48,6 +49,7 @@ public:
     };
 
     struct UncertaintyWeighter {
+        UncertaintyWeighter() {}
         template<typename DataType>
             DataType operator()(const Event& e, const DataType& w) const {
                 return w*w;
@@ -92,6 +94,10 @@ public:
 
     UncertaintyWeighter MakeUncertaintyWeighter() {
         return UncertaintyWeighter();
+    }
+
+    Prior MakePrior(const ParameterSet& params) {
+        return Prior(params);
     }
 };
 
