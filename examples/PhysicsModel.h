@@ -76,6 +76,10 @@ public:
     UncertaintyWeighter MakeUncertaintyWeighter() {
         return UncertaintyWeighter();
     }
+
+    Prior MakePrior(const ParameterSet& params) {
+        return Prior(params);
+    }
 };
 
 #endif //GOLEM_EXAMPLE_PHYSICS_MODEL_H
