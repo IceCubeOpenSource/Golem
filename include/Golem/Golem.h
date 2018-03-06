@@ -32,6 +32,7 @@ class Golem {
     phys_tools::ParameterSet params;
     WeighterMaker WM;
     UncertaintyWeighter UW;
+    Prior prior;
     std::unique_ptr<LType> likelihoodProblem;
 
     std::deque<Event> observation;
@@ -46,7 +47,8 @@ public:
             simulationHistogram(model.MakeHistogramSet()),
             params(model.MakeParameterSet()),
             WM(model.MakeWeighterMaker()),
-            UW(model.MakeUncertaintyWeighter()) {
+            UW(model.MakeUncertaintyWeighter(),
+            prior(model.MakePrior(params))) {
     }
 
     // Parameter functions
@@ -81,11 +83,11 @@ public:
         return simulation;
     }
 
-    // Distribution functions
-    HistogramSet GetExpectationDistribution(std::vector<double>) const;
-    HistogramSet GetSimulationDistribution(std::vector<double>) const;
+    //TODO Distribution functions
+    //HistogramSet GetObservationDistribution() const;
+    //HistogramSet GetSimulationDistribution(std::vector<double>) const;
 
-    // Fun stuff
+    //TODO Fun stuff
     //MakeHistogramOfArbitraryProperty(SomeHistogramType histogram, SomeParameterPointerType parameter_pointer)
 
     // Test functions
@@ -125,10 +127,27 @@ public:
         rng.seed(seed);
     }
 
+    void SetThreadCount(unsigned int nThreads) {
+        if(likelihoodProblem)
+            likelihoodProblem->setEvaluationThreadCount(nThreads);
+        else
+            throw std::runtime_error("LikelihoodProblem needs to exist before thread count can be set.");
+    }
+
 private:
     void MakeLikelihoodProblem() {
-        likelihoodProblem.reset(); // delete the LP
-
+        likelihoodProblem = std::make_shared<LType>(
+                phys_tools::likelihood::makeLikelihoodProblem<std::reference_wrapper<const Event>,NParameters>(
+                    observationHistogram,
+                    simulationHistogram,
+                    prior,
+                    {0.0},
+                    DataWeighter(phys_tools::likelihood::SimpleDataWeighter(), WM(params.getParameterValues())),
+                    WM,
+                    Likelihood(),
+                    params.getParameterValues()
+                    )
+                );
     }
 }
 
