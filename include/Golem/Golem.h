@@ -1,5 +1,5 @@
-#ifndef __GOLEM_H__
-#define __GOLEM_H__
+#ifndef GOLEM_H
+#define GOLEM_H
 
 #include <vector>
 #include <deque>
@@ -128,7 +128,6 @@ public:
 private:
     void MakeLikelihoodProblem() {
         likelihoodProblem.reset(); // delete the LP
-        //TODO make the likelihood problem again...
 
     }
 }
