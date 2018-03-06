@@ -1,3 +1,6 @@
+#ifndef GOLEM_EXAMPLE_DATA_LOADER_H
+#define GOLEM_EXAMPLE_DATA_LOADER_H
+
 #include <PhysTools/tableio.h>
 #include <LeptonWeighter/ParticleType.h>
 
