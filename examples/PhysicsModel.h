@@ -54,7 +54,7 @@ public:
             //In this example we suppose that all per-event weight information
             //is in the `weight` member of `Event`, so we just make a helper
             //object to fetch that.
-            phys_tools::cachedValueWeighter<Event,DataType,double> w(Event::weight);
+            phys_tools::cachedValueWeighter<Event,DataType,double> w(&Event::weight);
             //The free parameter in the model is an overall normalization.
             DataType normalization = p.extractParameter("normalization",parameters);
             //So, we just scale all per-event weights by that factor overall.

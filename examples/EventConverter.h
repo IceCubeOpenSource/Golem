@@ -20,7 +20,7 @@ protected:
     /// \details Transfer properties from the DataLoader::Event to a LeptonWeighter::Event and apply the weighter.
     double GetEventWeight(DataLoader::Event& e){
         LW::Event lw_e {
-          e.primaryType,
+          e.primary_type,
           e.final_state_particle_0,
           e.final_state_particle_1,
           e.interaction_x,
