@@ -2,17 +2,10 @@
 #define GOLEM_EXAMPLE_DATA_LOADER_H
 
 #include <deque>
-#include <vector>
 #include <PhysTools/tableio.h>
 #include <LeptonWeighter/ParticleType.h>
-#include <hdf5.h>
-#include <hdf5_hl.h>
 
 namespace analysis {
-
-namespace detail {
-  herr_t collectTableNames(hid_t group_id, const char * member_name, void* operator_data);
-} // close namespace
 
 class DataLoader {
 private:
@@ -20,7 +13,7 @@ private:
     std::string observation_data_path;
 public:
     DataLoader(std::string simulation_data_path, std::string observation_data_path):
-        simulation_data_path(simulation_data_path), observation_data_path(observation_data_path) {}
+	simulation_data_path(simulation_data_path), observation_data_path(observation_data_path) {}
 
     struct Event {
         double primaryEnergy;
@@ -43,14 +36,13 @@ public:
 
 protected:
 
-    template<typename CallbackType>
-    void readFile(const std::string& filePath, CallbackType action){
+    void readFile(const std::string& filePath,
+                  std::function<void(phys_tools::tableio::RecordID,Event&)> action) const{
         using namespace phys_tools::cts;
         phys_tools::tableio::H5File h5file(filePath);
         if(!h5file)
             throw std::runtime_error("Unable to open "+filePath);
-        std::set<std::string> tables;
-        H5Giterate(h5file,"/",NULL,&detail::collectTableNames,&tables);
+        std::set<std::string> tables=phys_tools::tableio::getTables(h5file,"/");
         if(tables.empty())
             throw std::runtime_error(filePath+" contains no tables");
         std::map<phys_tools::tableio::RecordID,Event> intermediateData;
@@ -93,33 +85,8 @@ protected:
             action(item.first,item.second);
     }
 public:
-    std::deque<Event> GetSimulationEvents(){
-        std::deque<Event> simulation_events;
-        try {
-            readFile(simulation_data_path,
-                    [&](phys_tools::tableio::RecordID id, Event& e){
-                    simulation_events.push_back(e);
-                    }
-                    );
-        } catch ( std::exception & ex){
-            std::cerr << ex.what() << std::endl;
-        }
-        return simulation_events;
-    }
-
-    std::deque<Event> GetDataEvents(){
-        std::deque<Event> observation_events;
-        try {
-            readFile(observation_data_path,
-                    [&](phys_tools::tableio::RecordID id, Event& e){
-                    observation_events.push_back(e);
-                    }
-                    );
-        } catch ( std::exception & ex){
-            std::cerr << ex.what() << std::endl;
-        }
-        return observation_events;
-    }
+    std::deque<Event> GetSimulationEvents() const;
+	std::deque<Event> GetDataEvents() const;
 };
 
 } // namespace analysis

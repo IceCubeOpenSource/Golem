@@ -12,11 +12,14 @@ namespace golem {
 
 template<typename PhysicsModel,typename Likelihood>
 class Golem {
+    typedef typename PhysicsModel PhysicsModel;
+    typedef typename Likelihood Likelihood;
     typedef typename PhysicsModel::Event Event;
     typedef typename PhysicsModel::WeighterMaker WeighterMaker;
     typedef typename PhysicsModel::UncertaintyWeighter UncertaintyWeighter;
     typedef typename PhysicsModel::HistogramSet HistogramSet;
     typedef typename PhysicsModel::Prior Prior;
+
     static constexpr unsigned int NParameters = PhysicsModel::NParameters;
 
     typedef phys_tools::likelihood::detail::SwitchableWeighter<phys_tools::likelihood::simpleDataWeighter, decltype(std::declval<WeighterMaker>()(std::declval<std::vector<double>>()))> DataWeighter;
