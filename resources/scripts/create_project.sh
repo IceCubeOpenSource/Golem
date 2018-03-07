@@ -36,8 +36,17 @@ fi
 
 PHYSICSMODEL_HEADER="${PROJ_DIR}/include/${PROJ_NAME}/${PROJ_NAME}PhysicsModel.h"
 
-echo "#ifndef ${PROJ_NAME}_PHYSICS_MODEL_H
-#define ${PROJ_NAME}_PHYSICS_MODEL_H
+echo "#ifndef ${PROJ_NAME}_PHYSICSMODEL_H
+#define ${PROJ_NAME}_PHYSICSMODEL_H
+
+#include <deque>
+#include <functional>
+#include <tuple>
+#include <vector>
+#include <PhysTools/histogram.h>
+#include <PhysTools/likelihood/likelihood.h>
+#include <PhysTools/likelihood/physics_weighters.h>
+#include <PhysTools/optimization/ParameterSet.h>
 
 class ${PROJ_NAME}PhysicsModel{
 public:
@@ -110,7 +119,7 @@ private:
 	//Add any member variables here
 };
 
-#endif //${PROJ_NAME}_PHYSICS_MODEL_H
+#endif //${PROJ_NAME}_PHYSICSMODEL_H
 " > $PHYSICSMODEL_HEADER
 if [ "$?" -ne 0 ]; then
 	echo "Failed to write template header file $PHYSICSMODEL_HEADER" 1>&2
@@ -165,3 +174,68 @@ ${PROJ_NAME}PhysicsModel::MakePrior(const ParameterSet& params) const{
 }
 " > $PHYSICSMODEL_IMPL
 
+#===============================================================================
+# *DataLoader.h
+#===============================================================================
+
+DATALOADER_HEADER="${PROJ_DIR}/include/${PROJ_NAME}/${PROJ_NAME}DataLoader.h"
+
+echo "#ifndef ${PROJ_NAME}_DATALOADER_H
+#define ${PROJ_NAME}_DATALOADER_H
+
+#include <deque>
+#include <PhysTools/tableio.h>
+#include <LeptonWeighter/ParticleType.h>
+
+class ${PROJ_NAME}DataLoader{
+public:
+	struct Event{
+		//Define the properties you want for each event you will read in
+	};
+	${PROJ_NAME}DataLoader();
+protected:
+	void readFile(const std::string& filePath,
+                  std::function<void(phys_tools::tableio::RecordID,Event&)> action) const;
+public:
+	std::deque<Event> GetSimulationEvents() const;
+	std::deque<Event> GetDataEvents() const;
+};
+
+#endif //${PROJ_NAME}_DATALOADER_H
+" > $DATALOADER_HEADER
+
+#===============================================================================
+# *DataLoader.cpp
+#===============================================================================
+DATALOADER_IMPL="${PROJ_DIR}/src/${PROJ_NAME}DataLoader.cpp"
+echo "#include <${PROJ_NAME}DataLoader.h>
+
+${PROJ_NAME}DataLoader::${PROJ_NAME}DataLoader(){}
+
+void 
+${PROJ_NAME}DataLoader::readFile(const std::string& filePath,
+  std::function<void(phys_tools::tableio::RecordID,Event&)> action) const{
+	using namespace phys_tools::cts;
+	phys_tools::tableio::H5File h5file(filePath);
+	if(!h5file)
+		throw std::runtime_error(\"Unable to open \"+filePath);
+	std::set<std::string> tables=phys_tools::tableio::getTables(h5file,\"/\");
+	if(tables.empty())
+		throw std::runtime_error(filePath+\" contains no tables\");
+	std::map<phys_tools::tableio::RecordID,Event> intermediateData;
+
+	//Put code here to read all tables of interest from the file
+
+	for(std::map<phys_tools::tableio::RecordID,Event>::value_type& item : intermediateData)
+		action(item.first,item.second);
+}
+
+std::deque<Event> ${PROJ_NAME}DataLoader::GetSimulationEvents() const{
+	//Write code here to read whatever files contain the simulated data
+}
+
+std::deque<Event> ${PROJ_NAME}DataLoader::GetDataEvents() const{
+	//Write code here to read whatever files contain the observed data
+}
+
+" > $DATALOADER_IMPL
