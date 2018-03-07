@@ -12,6 +12,9 @@ namespace golem {
 
 template<typename PhysicsModel, typedef Likelihood>
 class Golem {
+    typedef PhysicsModel PhysicsModel;
+    typedef Likelihood Likelihood;
+
     typedef PhysicsModel::Event Event;
     typedef PhysicsModel::WeighterMaker WeighterMaker;
     typedef PhysicsModel::UncertaintyWeighter UncertaintyWeighter;
