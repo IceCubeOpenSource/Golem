@@ -36,8 +36,8 @@ public:
 
 protected:
 
-    template<typename CallbackType>
-    void readFile(const std::string& filePath, CallbackType action) const{
+    void readFile(const std::string& filePath,
+                  std::function<void(phys_tools::tableio::RecordID,Event&)> action) const{
         using namespace phys_tools::cts;
         phys_tools::tableio::H5File h5file(filePath);
         if(!h5file)
