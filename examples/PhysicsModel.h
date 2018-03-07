@@ -161,7 +161,7 @@ public:
     ///object will pass it a reference to the ParameterSet being used, but we
     ///can pass extra informtion of our own to the WeighterMaker constructor if
     ///we want to.
-    WeighterMaker MakeWeigherMaker(const phys_tools::ParameterSet& params) {
+    WeighterMaker MakeWeighterMaker(const phys_tools::ParameterSet& params) {
         return WeighterMaker(params);
     }
 

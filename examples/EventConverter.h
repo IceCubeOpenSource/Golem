@@ -67,6 +67,7 @@ public:
         e_output.primaryEnergy = e_input.primaryEnergy;
         e_output.primaryZenith = e_input.primaryZenith;
         e_output.weight = GetEventWeight(e_input);
+
         return e_output;
     }
 };

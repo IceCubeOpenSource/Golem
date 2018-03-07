@@ -5,26 +5,26 @@
 #include <deque>
 
 #include <PhysTools/histogram.h>
-#include <PhysTools/bin_type.h>
+#include <PhysTools/bin_types.h>
 #include <PhysTools/likelihood/likelihood.h>
 
 namespace golem {
 
-template<typename PhysicsModel, typedef Likelihood>
+template<typename PhysicsModel,typename Likelihood>
 class Golem {
-    typedef PhysicsModel::Event Event;
-    typedef PhysicsModel::WeighterMaker WeighterMaker;
-    typedef PhysicsModel::UncertaintyWeighter UncertaintyWeighter;
-    typedef PhysicsModel::HistogramSet HistogramSet;
-    typedef PhysicsModel::Prior Prior;
+    typedef typename PhysicsModel::Event Event;
+    typedef typename PhysicsModel::WeighterMaker WeighterMaker;
+    typedef typename PhysicsModel::UncertaintyWeighter UncertaintyWeighter;
+    typedef typename PhysicsModel::HistogramSet HistogramSet;
+    typedef typename PhysicsModel::Prior Prior;
     static constexpr unsigned int NParameters = PhysicsModel::NParameters;
 
-    typedef phys_tools::likelihood::detail::SwitchableWeighter<phys_tools::likelihood::SimpleDataWeighter, decltype(WeighterMaker(std::vector<double>))> DataWeighter;
+    typedef phys_tools::likelihood::detail::SwitchableWeighter<phys_tools::likelihood::simpleDataWeighter, decltype(std::declval<WeighterMaker>()(std::declval<std::vector<double>>()))> DataWeighter;
 
     typedef phys_tools::likelihood::LikelihoodProblem<std::reference_wrapper<const Event>, HistogramSet, DataWeighter, phys_tools::likelihood::detail::WeighterCollection<WeighterMaker, UncertaintyWeighter>, Prior, Likelihood, NParameters> LType;
 
-    static constexpr dataWeighterIndex = 0;
-    static constexpr asimovWeighterIndex = 1;
+    static constexpr unsigned int dataWeighterIndex = 0;
+    static constexpr unsigned int asimovWeighterIndex = 1;
 
     PhysicsModel model;
     HistogramSet observationHistogram;
@@ -47,8 +47,8 @@ public:
             simulationHistogram(model.MakeHistogramSet()),
             params(model.MakeParameterSet()),
             WM(model.MakeWeighterMaker(params)),
-            UW(model.MakeUncertaintyWeighter(),
-            prior(model.MakePrior(params))) {
+            UW(model.MakeUncertaintyWeighter()),
+            prior(model.MakePrior(params)) {
     }
 
     // Parameter functions
@@ -57,7 +57,7 @@ public:
     }
 
     // LLH functions
-    phys_tools::likelihoodPoint MinLLH(double changeTolerance=1e-6, unsigned int historySize=5) const {
+    phys_tools::likelihood::likelihoodPoint MinLLH(double changeTolerance=1e-6, unsigned int historySize=5) const {
         if(!likelihoodProblem)
             throw std::runtime_error("LikelihoodProblem needs to exist before thread count can be set.");
         phys_tools::lbfgsb::LBFGSB_Driver minimizer(params);
@@ -116,7 +116,7 @@ public:
         auto weighter = WM(parameters);
 
         // Set the asimov weighter
-        likelihoodProblem.dataWeighter.setWeighter(asimovWeigherIndex);
+        likelihoodProblem.dataWeighter.setWeighter(asimovWeighterIndex);
         std::get<asimovWeighterIndex>(likelihoodProblem.dataWeighter.implementations) = weighter;
 
         // overwrite the observation in the Golem
@@ -160,14 +160,14 @@ private:
                     simulationHistogram,
                     prior,
                     {0.0},
-                    DataWeighter(SwitchableWeighter(phys_tools::likelihood::SimpleDataWeighter(), WM(params.getParameterValues()))),
+                    DataWeighter(SwitchableWeighter(phys_tools::likelihood::simpleDataWeighter(), WM(params.getParameterValues()))),
                     WM,
                     Likelihood(),
                     params.getParameterValues()
                     )
                 );
     }
-}
+};
 
 } // namespace golem
 
