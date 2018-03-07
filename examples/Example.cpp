@@ -11,5 +11,7 @@ int main() {
 
   golem::Golem<analysis::PhysicsModel,phys_tools::likelihood::SAYLikelihood> golem(physics_model);
 
+  phys_tools::likelihood::likelihoodPoint p = golem.MinLLH();
+
   return 0;
 }

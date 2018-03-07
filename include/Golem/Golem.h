@@ -10,10 +10,10 @@
 
 namespace golem {
 
-template<typename PhysicsModel,typename Likelihood>
+template<typename PhysicsModel_,typename Likelihood_>
 class Golem {
-    typedef typename PhysicsModel PhysicsModel;
-    typedef typename Likelihood Likelihood;
+    typedef PhysicsModel_ PhysicsModel;
+    typedef Likelihood_ Likelihood;
     typedef typename PhysicsModel::Event Event;
     typedef typename PhysicsModel::WeighterMaker WeighterMaker;
     typedef typename PhysicsModel::UncertaintyWeighter UncertaintyWeighter;
@@ -66,7 +66,7 @@ public:
         phys_tools::lbfgsb::LBFGSB_Driver minimizer(params);
         minimizer.setChangeTolerance(changeTolerance);
         minimizer.setHistorySize(historySize);
-        minimizer.minimize(phys_tools::likelihood::BFGS_Function<LType>(likelihoodProblem));
+        minimizer.minimize(phys_tools::likelihood::BFGS_Function<LType>(*likelihoodProblem));
         phys_tools::likelihood::likelihoodPoint result;
         result.likelihood = minimizer.minimumValue();
         result.params = minimizer.minimumPosition();

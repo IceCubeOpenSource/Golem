@@ -58,7 +58,7 @@ public:
             //The free parameter in the model is an overall normalization.
             DataType normalization = p.extractParameter("normalization",parameters);
             //So, we just scale all per-event weights by that factor overall.
-            return w*normalization;
+            return normalization*w;
         }
     };
 
