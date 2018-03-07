@@ -160,7 +160,7 @@ private:
                     simulationHistogram,
                     prior,
                     {0.0},
-                    DataWeighter(phys_tools::likelihood::SimpleDataWeighter(), WM(params.getParameterValues())),
+                    DataWeighter(SwitchableWeighter(phys_tools::likelihood::SimpleDataWeighter(), WM(params.getParameterValues()))),
                     WM,
                     Likelihood(),
                     params.getParameterValues()
