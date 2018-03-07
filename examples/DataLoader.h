@@ -10,7 +10,7 @@
 
 namespace analysis {
 
-namespace {
+namespace detail {
   herr_t collectTableNames(hid_t group_id, const char * member_name, void* operator_data);
 } // close namespace
 
@@ -50,7 +50,7 @@ protected:
         if(!h5file)
             throw std::runtime_error("Unable to open "+filePath);
         std::set<std::string> tables;
-        H5Giterate(h5file,"/",NULL,&collectTableNames,&tables);
+        H5Giterate(h5file,"/",NULL,&detail::collectTableNames,&tables);
         if(tables.empty())
             throw std::runtime_error(filePath+" contains no tables");
         std::map<phys_tools::tableio::RecordID,Event> intermediateData;

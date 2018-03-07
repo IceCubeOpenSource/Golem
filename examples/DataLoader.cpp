@@ -2,7 +2,7 @@
 
 namespace analysis {
 
-namespace {
+namespace detail{
 
   herr_t collectTableNames(hid_t group_id, const char * member_name, void* operator_data){
       std::set<std::string>* items=static_cast<std::set<std::string>*>(operator_data);
@@ -10,6 +10,6 @@ namespace {
       return(0);
   }
 
-} // close namespace
+} // namespace detail
 
 } // namespace analysis
