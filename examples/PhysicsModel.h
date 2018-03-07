@@ -136,7 +136,7 @@ public:
         //of reconstructed zenith, so we pass those values to the histogram. We
         //pass a reference to the event itself as the 'amount' to put the event
         //itself into the histogram.
-        h.get<0>().add(e.energy, cos(e.zenith), amount(std::cref(e)));
+        std::get<0>(h).add(e.energy, cos(e.zenith), amount(std::cref(e)));
     }
 
     ///This function creates and provides an object describing all of the
