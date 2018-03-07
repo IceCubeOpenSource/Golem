@@ -2,11 +2,8 @@
 #define GOLEM_EXAMPLE_DATA_LOADER_H
 
 #include <deque>
-#include <vector>
 #include <PhysTools/tableio.h>
 #include <LeptonWeighter/ParticleType.h>
-#include <hdf5.h>
-#include <hdf5_hl.h>
 
 namespace analysis {
 
