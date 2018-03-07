@@ -18,7 +18,7 @@ protected:
     /// \brief Gets a data loader event and returns its weight.
     /// @param e_input Event from the data loader.
     /// \details Transfer properties from the DataLoader::Event to a LeptonWeighter::Event and apply the weighter.
-    double GetEventWeight(DataLoader::Event& e){
+    double GetEventWeight(const DataLoader::Event& e) const{
         LW::Event lw_e {
           e.primary_type,
           e.final_state_particle_0,
@@ -59,7 +59,7 @@ public:
     /// PhysicsModel::Event structure. In this particular example the analizer is only
     /// needs energy and zenith information. Additionally the weight is calculated by
     /// LeptonWeighter and store in the object.
-    PhysicsModel::Event ConvertEvent(DataLoader::Event& e_input){
+    PhysicsModel::Event ConvertEvent(const DataLoader::Event& e_input) const{
         PhysicsModel::Event e_output;
 
         e_output.energy = e_input.energy;

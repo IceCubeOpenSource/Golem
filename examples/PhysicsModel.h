@@ -85,7 +85,7 @@ public:
 
         ///Make gaussian prior for the normalization with a preferred (mean)
         ///value of 1.0 and a width (standard deviation) of 0.1.
-        Prior(const phys_tools::ParameterSet& p): p(p), normalization(1.,0.1){}
+        Prior(const phys_tools::ParameterSet& p): p(p), normalization(1.,0.01){}
 
         ///For a given set of model parameters evaluate the log of the prior
         template<typename DataType>

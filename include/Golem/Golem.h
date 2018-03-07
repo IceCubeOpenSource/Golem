@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <deque>
+#include <memory>
 
 #include <PhysTools/histogram.h>
 #include <PhysTools/bin_types.h>
@@ -35,6 +36,7 @@ class Golem {
     phys_tools::ParameterSet params;
     WeighterMaker WM;
     UncertaintyWeighter UW;
+    phys_tools::likelihood::detail::WeighterCollection<WeighterMaker, UncertaintyWeighter> WC;
     Prior prior;
     std::unique_ptr<LType> likelihoodProblem;
 
@@ -51,7 +53,9 @@ public:
             params(model.MakeParameterSet()),
             WM(model.MakeWeighterMaker(params)),
             UW(model.MakeUncertaintyWeighter()),
+            WC(WM,UW),
             prior(model.MakePrior(params)) {
+        MakeLikelihoodProblem();
     }
 
     // Parameter functions
@@ -62,7 +66,7 @@ public:
     // LLH functions
     phys_tools::likelihood::likelihoodPoint MinLLH(double changeTolerance=1e-6, unsigned int historySize=5) const {
         if(!likelihoodProblem)
-            throw std::runtime_error("LikelihoodProblem needs to exist before thread count can be set.");
+            throw std::runtime_error("LikelihoodProblem needs to exist before the minimizer can be called.");
         phys_tools::lbfgsb::LBFGSB_Driver minimizer(params);
         minimizer.setChangeTolerance(changeTolerance);
         minimizer.setHistorySize(historySize);
@@ -157,18 +161,19 @@ public:
 
 private:
     void MakeLikelihoodProblem() {
-        likelihoodProblem = std::make_shared<LType>(
+        likelihoodProblem.reset( new LType(
                 phys_tools::likelihood::makeLikelihoodProblem<std::reference_wrapper<const Event>,NParameters>(
                     observationHistogram,
-                    simulationHistogram,
+                    {simulationHistogram},
                     prior,
                     {0.0},
-                    DataWeighter(SwitchableWeighter(phys_tools::likelihood::simpleDataWeighter(), WM(params.getParameterValues()))),
-                    WM,
+                    DataWeighter(phys_tools::likelihood::detail::SwitchableWeighter<phys_tools::likelihood::simpleDataWeighter, decltype(WM(std::declval<std::vector<double>>()))>(phys_tools::likelihood::simpleDataWeighter(), WM(params.getParameterValues()))),
+                    WC,
                     Likelihood(),
                     params.getParameterValues()
                     )
-                );
+                )
+            );
     }
 };
 
