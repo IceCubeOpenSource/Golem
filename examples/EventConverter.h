@@ -34,7 +34,7 @@ protected:
           e.radius,
           e.total_column_depth
         };
-        return weighter(lw_e);
+        return (*weighter)(lw_e);
     }
 public:
     /// \brief Event converter constructor.
