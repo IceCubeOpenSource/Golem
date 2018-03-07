@@ -2,14 +2,32 @@
 
 namespace analysis {
 
-namespace detail{
+std::deque<DataLoader::Event> DataLoader::GetSimulationEvents() const{
+	std::deque<Event> simulation_events;
+	try {
+		readFile(simulation_data_path,
+				[&](phys_tools::tableio::RecordID id, Event& e){
+				simulation_events.push_back(e);
+				}
+				);
+	} catch ( std::exception & ex){
+		std::cerr << ex.what() << std::endl;
+	}
+	return simulation_events;
+}
 
-  herr_t collectTableNames(hid_t group_id, const char * member_name, void* operator_data){
-      std::set<std::string>* items=static_cast<std::set<std::string>*>(operator_data);
-      items->insert(member_name);
-      return(0);
-  }
-
-} // namespace detail
-
+std::deque<DataLoader::Event> DataLoader::GetDataEvents() const{
+	std::deque<Event> observation_events;
+	try {
+		readFile(observation_data_path,
+				[&](phys_tools::tableio::RecordID id, Event& e){
+				observation_events.push_back(e);
+				}
+				);
+	} catch ( std::exception & ex){
+		std::cerr << ex.what() << std::endl;
+	}
+	return observation_events;
+}
+	
 } // namespace analysis
