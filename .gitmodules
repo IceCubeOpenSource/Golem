@@ -1,3 +1,6 @@
 [submodule "resources/analysis/golem_HESE"]
 	path = resources/analysis/golem_HESE
 	url = git@github.com:hogenshpogen/golem_HESE
+[submodule "resources/analysis/golem_MESE"]
+	path = resources/analysis/golem_MESE
+	url = git@github.com:hogenshpogen/golem_MESE
