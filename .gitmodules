@@ -4,3 +4,6 @@
 [submodule "resources/analysis/golem_MESE"]
 	path = resources/analysis/golem_MESE
 	url = git@github.com:hogenshpogen/golem_MESE
+[submodule "resources/analysis/golem_MEOWS"]
+	path = resources/analysis/golem_MEOWS
+	url = git@github.com:arguelles/golem_MEOWS
