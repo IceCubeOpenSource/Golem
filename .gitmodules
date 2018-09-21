@@ -1,0 +1,3 @@
+[submodule "resources/analysis/golem_HESE"]
+	path = resources/analysis/golem_HESE
+	url = git@github.com:hogenshpogen/golem_HESE
