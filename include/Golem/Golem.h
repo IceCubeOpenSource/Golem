@@ -110,7 +110,24 @@ public:
 
     //TODO Distribution functions
     //HistogramSet GetObservationDistribution() const;
-    //HistogramSet GetSimulationDistribution(std::vector<double>) const;
+
+    // General case
+    template<typename T, typename... Args>
+    decltype(std::tuple_cat(phys_tools::histograms::histogram<decltype(std::declval<T>())::dimension,double>, groupHistograms(std::declval<Args>()...))) groupHistograms(T t, Args... args) {
+    return std::tuple_cat(phys_tools::histograms::histogram<t::dimension,double>, groupHistograms(args...));
+    };
+
+    decltype(groupHistograms<HistogramSet>) GetSimulationDistribution(std::vector<double> parameters) const {
+    //phys_tools::histograms::histogram<std::tuple_element<0,HistogramSet>::type::dimensions,double> GetSimulationDistribution(std::vector<double> parameters) const {
+
+    }
+
+    /*
+    decltype(std::declval<HistogramSet>()) GetSimulationDistribution(std::vector<double> parameters) const {
+        auto weighter = WM(parameters);
+        //decltype(simulationHistogram.getAxis(0));
+    }
+    */
 
     //TODO Fun stuff
     //MakeHistogramOfArbitraryProperty(SomeHistogramType histogram, SomeParameterPointerType parameter_pointer)
