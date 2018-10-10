@@ -130,7 +130,7 @@ fi
 # *PhysicsModel.cpp
 #===============================================================================
 PHYSICSMODEL_IMPL="${PROJ_DIR}/src/${PROJ_NAME}PhysicsModel.cpp"
-echo "#include <${PROJ_NAME}PhysicsModel.h>
+echo "#include <${PROJ_NAME}/${PROJ_NAME}PhysicsModel.h>
 
 //Change the constructor to initialize any member variables that you add
 ${PROJ_NAME}PhysicsModel::${PROJ_NAME}PhysicsModel(){}
@@ -315,7 +315,7 @@ find_hdf5(){
 	fi
 	HDF5_COMPILE_COMMAND=\`h5cc -show\`
 	for item in \$HDF5_COMPILE_COMMAND; do
-		item=\`echo \"\$item\" | sed 's| |\\n|g' | sed -n 's/.*-L\\([^ ]*\\).*/\\1/p'\`
+		item=\`echo \"\$item\" | sed 's| | \\\\n|g' | sed -n 's/.*-L\\([^ ]*\\).*/\\1/p'\`
 		if [ -n \"\$item\" ]; then
 			POSSIBLE_HDF5_LIBDIRS=\"\$POSSIBLE_HDF5_LIBDIRS
 				\$item\"
@@ -330,7 +330,7 @@ find_hdf5(){
 		echo \" Unable to guess \$PKG library directory\"
 		return
 	fi
-	POSSIBLE_HDF5_INCDIRS=\`echo \"\$HDF5_COMPILE_COMMAND\" | sed 's| |\\n|g' | sed -n 's/.*-I\\([^ ]*\\).*/\\1/p'\`
+	POSSIBLE_HDF5_INCDIRS=\`echo \"\$HDF5_COMPILE_COMMAND\" | sed 's| |\\\\n|g' | sed -n 's/.*-I\\([^ ]*\\).*/\\1/p'\`
 	POSSIBLE_HDF5_INCDIRS=\"\$POSSIBLE_HDF5_INCDIRS \${HDF5_LIBDIR}/../include\"
 	for HDF5_INCDIR in \$POSSIBLE_HDF5_INCDIRS; do
 		if [ -d \$HDF5_INCDIR -a -e \$HDF5_INCDIR/H5version.h ]; then
@@ -482,6 +482,12 @@ locations of dependencies:
                              and libraries in DIR/lib
   --with-nusquids-incdir=DIR        use the copy of nuSQuIDS in DIR
   --with-nusquids-libdir=DIR        use the copy of nuSQuIDS in DIR
+  --with-phystools=DIR        use the copy of PhysTools in DIR
+                             assuming headers are in DIR/include
+                             and libraries in DIR/lib
+  --with-phystools-incdir=DIR        use the copy of PhysTools in DIR
+  --with-phystools-libdir=DIR        use the copy of PhysTools in DIR
+
   --with-photospline-config=EXE  use this photospline-config
 For the python bindings the following flags are used:
   --with-python-bindings         enable python binding compilation
@@ -561,6 +567,18 @@ do
 
 	TMP=\`echo \"\$var\" | sed -n 's/^--with-nusquids-libdir=\(.*\)$/\1/p'\`
 	if [ \"\$TMP\" ]; then NUSQUIDS_LIBDIR=\"\$TMP\"; continue; fi
+
+	TMP=\`echo \"\$var\" | sed -n 's/^--with-phystools=\(.*\)$/\1/p'\`
+	if [ \"\$TMP\" ]; then
+		PHYSTOOLS_INCDIR=\"\${TMP}/include\";
+		PHYSTOOLS_LIBDIR=\"\${TMP}/lib\";
+	continue; fi
+
+	TMP=\`echo \"\$var\" | sed -n 's/^--with-phystools-incdir=\(.*\)$/\1/p'\`
+	if [ \"\$TMP\" ]; then PHYSTOOLS_INCDIR=\"\$TMP\"; continue; fi
+
+	TMP=\`echo \"\$var\" | sed -n 's/^--with-phystools-libdir=\(.*\)$/\1/p'\`
+	if [ \"\$TMP\" ]; then PHYSTOOLS_LIBDIR=\"\$TMP\"; continue; fi
 
 	TMP=\`echo \"\$var\" | sed -n 's/^--with-leptonweighter=\(.*\)$/\1/p'\`
 	if [ \"\$TMP\" ]; then
@@ -687,6 +705,21 @@ fi
 
 find_package nusquids
 
+if [ \"\$PHYSTOOLS_INCDIR\" -a \"\$PHYSTOOLS_LIBDIR\" ]; then
+	echo \"Checking manually specified PhysTools ...\"
+	if [ -d \"\$PHYSTOOLS_INCDIR\" \\
+         -a -d \"\$PHYSTOOLS_LIBDIR\" \\
+         -a -e \"\$PHYSTOOLS_LIBDIR/libPhysTools.a\" ]; then
+		PHYSTOOLS_FOUND=100000
+		PHYSTOOLS_CFLAGS=\"-I\$PHYSTOOLS_INCDIR\"
+		PHYSTOOLS_LDFLAGS=\"-L\$PHYSTOOLS_LIBDIR -lPhysTools\"
+	else
+		echo \"Warning: manually specifed PhysTools not found; will attempt auto detection\"
+	fi
+fi
+
+find_package phystools
+
 if [ \"\$NEWNUFLUX_INCDIR\" -a \"\$NEWNUFLUX_LIBDIR\" ]; then
 	echo \"Checking manually specified newnuflux...\"
 	if [ -d \"\$NEWNUFLUX_INCDIR\" \\
@@ -795,15 +828,18 @@ echo \"NEWNUFLUX_LDFLAGS=\$NEWNUFLUX_LDFLAGS\" >> ./Makefile
 echo \"PHOTOSPLINE_CFLAGS=\$PHOTOSPLINE_CFLAGS\" >> ./Makefile
 echo \"PHOTOSPLINE_LDFLAGS=\$PHOTOSPLINE_LDFLAGS\" >> ./Makefile
 
+echo \"PHYSTOOLS_CFLAGS=\$PHYSTOOLS_CFLAGS\" >> ./Makefile
+echo \"PHYSTOOLS_LDFLAGS=\$PHYSTOOLS_LDFLAGS\" >> ./Makefile
+
 echo '
 
 INC${PROJ_NAME}=\$(PATH_${PROJ_NAME})/include
 LIB${PROJ_NAME}=\$(PATH_${PROJ_NAME})/lib
 
 # FLAGS
-CFLAGS= -O3 -fPIC -I\$(INC${PROJ_NAME}) \$(SQUIDS_CFLAGS) \$(NUSQUIDS_CFLAGS) \$(GSL_CFLAGS) \$(HDF5_CFLAGS) \$(NEWNUFLUX_CFLAGS) \$(PHOTOSPLINE_CFLAGS)
+CFLAGS= -O3 -fPIC -I\$(INC${PROJ_NAME}) \$(SQUIDS_CFLAGS) \$(NUSQUIDS_CFLAGS) \$(GSL_CFLAGS) \$(HDF5_CFLAGS) \$(NEWNUFLUX_CFLAGS) \$(PHOTOSPLINE_CFLAGS) \$(PHYSTOOLS_CFLAGS)
 LDFLAGS= -Wl,-rpath -Wl,\$(LIB${PROJ_NAME}) -L\$(LIB${PROJ_NAME})
-LDFLAGS+= \$(SQUIDS_LDFLAGS) \$(NUSQUIDS_LDFLAGS) \$(GSL_LDFLAGS) \$(HDF5_LDFLAGS) \$(NEWNUFLUX_LDFLAGS) \$(PHOTOSPLINE_LDFLAGS) -lpthread
+LDFLAGS+= \$(SQUIDS_LDFLAGS) \$(NUSQUIDS_LDFLAGS) \$(GSL_LDFLAGS) \$(HDF5_LDFLAGS) \$(NEWNUFLUX_LDFLAGS) \$(PHOTOSPLINE_LDFLAGS) \$(PHYSTOOLS_LDFLAGS) -lpthread
 
 # Project files
 NAME=${PROJ_NAME}
