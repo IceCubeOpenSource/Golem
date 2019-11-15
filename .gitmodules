@@ -7,3 +7,6 @@
 [submodule "resources/analysis/golem_MEOWS"]
 	path = resources/analysis/golem_MEOWS
 	url = git@github.com:arguelles/golem_MEOWS
+[submodule "resources/analysis/golem_ESTES"]
+	path = resources/analysis/golem_ESTES
+	url = https://github.com/manuel92780/Golem_ESTES
