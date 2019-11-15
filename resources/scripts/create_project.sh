@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh%
 
 if [ "$#" -lt 2 ]; then
 	echo "Usage: create_project name path"
@@ -598,17 +598,17 @@ do
 		PHOTOSPLINE_CONFIG=\"\${TMP}\";
 	continue; fi
 
-	TMP=\`echo \"\$var\" | sed -n 's/^--with-newnuflux=\(.*\)$/\1/p'\`
+	TMP=\`echo \"\$var\" | sed -n 's/^--with-nuflux=\(.*\)$/\1/p'\`
 	if [ \"\$TMP\" ]; then
-		NEWNUFLUX_INCDIR=\"\${TMP}/include\";
-		NEWNUFLUX_LIBDIR=\"\${TMP}/lib\";
+		NUFLUX_INCDIR=\"\${TMP}/include\";
+		NUFLUX_LIBDIR=\"\${TMP}/lib\";
 	continue; fi
 
-	TMP=\`echo \"\$var\" | sed -n 's/^--with-newnuflux-incdir=\(.*\)$/\1/p'\`
-	if [ \"\$TMP\" ]; then NEWNUFLUX_INCDIR=\"\$TMP\"; continue; fi
+	TMP=\`echo \"\$var\" | sed -n 's/^--with-nuflux-incdir=\(.*\)$/\1/p'\`
+	if [ \"\$TMP\" ]; then NUFLUX_INCDIR=\"\$TMP\"; continue; fi
 
-	TMP=\`echo \"\$var\" | sed -n 's/^--with-newnuflux-libdir=\(.*\)$/\1/p'\`
-	if [ \"\$TMP\" ]; then NEWNUFLUX_LIBDIR=\"\$TMP\"; continue; fi
+	TMP=\`echo \"\$var\" | sed -n 's/^--with-nuflux-libdir=\(.*\)$/\1/p'\`
+	if [ \"\$TMP\" ]; then NUFLUX_LIBDIR=\"\$TMP\"; continue; fi
 
 	TMP=\`echo \"\$var\" | sed -n 's/^--with-boost=\(.*\)$/\1/p'\`
 	if [ \"\$TMP\" ]; then
@@ -720,23 +720,23 @@ fi
 
 find_package phystools
 
-if [ \"\$NEWNUFLUX_INCDIR\" -a \"\$NEWNUFLUX_LIBDIR\" ]; then
-	echo \"Checking manually specified newnuflux...\"
-	if [ -d \"\$NEWNUFLUX_INCDIR\" \\
-         -a -d \"\$NEWNUFLUX_LIBDIR\" \\
-         -a -e \"\$NEWNUFLUX_LIBDIR/libNewNuFlux.a\" ]; then
-		NEWNUFLUX_FOUND=1
-		NEWNUFLUX_CFLAGS=\"-I\$NEWNUFLUX_INCDIR\"
-		NEWNUFLUX_LDFLAGS=\"-L\$NEWNUFLUX_LIBDIR -lNewNuFlux\"
+if [ \"\$NUFLUX_INCDIR\" -a \"\$NUFLUX_LIBDIR\" ]; then
+	echo \"Checking manually specified nuflux...\"
+	if [ -d \"\$NUFLUX_INCDIR\" \\
+         -a -d \"\$NUFLUX_LIBDIR\" \\
+         -a -e \"\$NUFLUX_LIBDIR/libnuflux.a\" ]; then
+		NUFLUX_FOUND=1
+		NUFLUX_CFLAGS=\"-I\$NUFLUX_INCDIR\"
+		NUFLUX_LDFLAGS=\"-L\$NUFLUX_LIBDIR -lnuflux\"
 		if \$CXX --version | grep -q \"Free Software Foundation\"; then
-			NEWNUFLUX_CFLAGS=\"\$NEWNUFLUX_CFLAGS -Wno-abi\"
+			NUFLUX_CFLAGS=\"\$NUFLUX_CFLAGS -Wno-abi\"
 		fi
 	else
-		echo \"Warning: manually specifed NewNuFlux not found; will attempt auto detection\"
+		echo \"Warning: manually specifed nuflux not found; will attempt auto detection\"
 	fi
 fi
 
-find_package newnuflux
+find_package nuflux
 
 try_find_photospline
 
@@ -745,7 +745,7 @@ ensure_found hdf5
 ensure_found squids
 ensure_found nusquids
 ensure_found photospline
-ensure_found newnuflux
+ensure_found nuflux
 
 if [ ! -d ./build/ ]; then
     mkdir build;
@@ -822,8 +822,8 @@ echo \"SQUIDS_LDFLAGS=\$SQUIDS_LDFLAGS\" >> ./Makefile
 echo \"NUSQUIDS_CFLAGS=\$NUSQUIDS_CFLAGS\" >> ./Makefile
 echo \"NUSQUIDS_LDFLAGS=\$NUSQUIDS_LDFLAGS\" >> ./Makefile
 
-echo \"NEWNUFLUX_CFLAGS=\$NEWNUFLUX_CFLAGS\" >> ./Makefile
-echo \"NEWNUFLUX_LDFLAGS=\$NEWNUFLUX_LDFLAGS\" >> ./Makefile
+echo \"NUFLUX_CFLAGS=\$NUFLUX_CFLAGS\" >> ./Makefile
+echo \"NUFLUX_LDFLAGS=\$NUFLUX_LDFLAGS\" >> ./Makefile
 
 echo \"PHOTOSPLINE_CFLAGS=\$PHOTOSPLINE_CFLAGS\" >> ./Makefile
 echo \"PHOTOSPLINE_LDFLAGS=\$PHOTOSPLINE_LDFLAGS\" >> ./Makefile
@@ -837,9 +837,9 @@ INC${PROJ_NAME}=\$(PATH_${PROJ_NAME})/include
 LIB${PROJ_NAME}=\$(PATH_${PROJ_NAME})/lib
 
 # FLAGS
-CFLAGS= -O3 -fPIC -I\$(INC${PROJ_NAME}) \$(SQUIDS_CFLAGS) \$(NUSQUIDS_CFLAGS) \$(GSL_CFLAGS) \$(HDF5_CFLAGS) \$(NEWNUFLUX_CFLAGS) \$(PHOTOSPLINE_CFLAGS) \$(PHYSTOOLS_CFLAGS)
+CFLAGS= -O3 -fPIC -I\$(INC${PROJ_NAME}) \$(SQUIDS_CFLAGS) \$(NUSQUIDS_CFLAGS) \$(GSL_CFLAGS) \$(HDF5_CFLAGS) \$(NUFLUX_CFLAGS) \$(PHOTOSPLINE_CFLAGS) \$(PHYSTOOLS_CFLAGS)
 LDFLAGS= -Wl,-rpath -Wl,\$(LIB${PROJ_NAME}) -L\$(LIB${PROJ_NAME})
-LDFLAGS+= \$(SQUIDS_LDFLAGS) \$(NUSQUIDS_LDFLAGS) \$(GSL_LDFLAGS) \$(HDF5_LDFLAGS) \$(NEWNUFLUX_LDFLAGS) \$(PHOTOSPLINE_LDFLAGS) \$(PHYSTOOLS_LDFLAGS) -lpthread
+LDFLAGS+= \$(SQUIDS_LDFLAGS) \$(NUSQUIDS_LDFLAGS) \$(GSL_LDFLAGS) \$(HDF5_LDFLAGS) \$(NUFLUX_LDFLAGS) \$(PHOTOSPLINE_LDFLAGS) \$(PHYSTOOLS_LDFLAGS) -lpthread
 
 # Project files
 NAME=${PROJ_NAME}
