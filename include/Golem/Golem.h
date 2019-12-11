@@ -110,17 +110,32 @@ public:
 
     //TODO Distribution functions
     //HistogramSet GetObservationDistribution() const;
+    //
+    template<typename T>
+    static std::tuple<T> groupHistograms(T t) {
+        return std::tuple<T>(t);
+    }
 
-    // General case
     template<typename T, typename... Args>
-    decltype(std::tuple_cat(phys_tools::histograms::histogram<decltype(std::declval<T>())::dimension,double>, groupHistograms(std::declval<Args>()...))) groupHistograms(T t, Args... args) {
-    return std::tuple_cat(phys_tools::histograms::histogram<t::dimension,double>, groupHistograms(args...));
-    };
+    static decltype(std::tuple_cat(std::declval<T>(), groupHistograms(std::declval<Args>()...))) groupHistograms(T t, Args... args) {
+        return std::tuple_cat(std::tuple<T>(t), groupHistograms(args...));
+    }
 
-    decltype(groupHistograms<HistogramSet>) GetSimulationDistribution(std::vector<double> parameters) const {
+    template<typename DataType, typename T>
+    static std::tuple<T> getNumericHistogram(T t) {
+        return std::tuple<phys_tools::histograms::histogram<T::dimensions>, DataType>(phys_tools::histograms::histogram<T::dimensions, DataType>());
+    }
+
+    template<typename DataType, typename T, typename... Args>
+    static decltype(std::tuple_cat(std::declval<T>(), getNumericHistogram(std::declval<Args>()...))) getNumericHistogram(T t, Args... args) {
+        return std::tuple_cat(std::tuple<phys_tools::histograms::histogram<T::dimensions>, DataType>(phys_tools::histograms::histogram<T::dimensions, DataType>()),
+                getNumericHistogram<DataType>(args...));
+    }
+
+    //decltype(otherhorriblething<HistogramSet>) GetSimulationDistribution(std::vector<double> parameters) const {
     //phys_tools::histograms::histogram<std::tuple_element<0,HistogramSet>::type::dimensions,double> GetSimulationDistribution(std::vector<double> parameters) const {
 
-    }
+    //}
 
     /*
     decltype(std::declval<HistogramSet>()) GetSimulationDistribution(std::vector<double> parameters) const {
