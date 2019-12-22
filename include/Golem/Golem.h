@@ -9,6 +9,140 @@
 #include <PhysTools/bin_types.h>
 #include <PhysTools/likelihood/likelihood.h>
 
+namespace detail {
+
+template<typename T>
+static std::tuple<T> groupHistograms(T t) {
+    return std::tuple<T>(t);
+}
+
+template<typename T, typename... Args>
+static decltype(std::tuple_cat(std::declval<T>(), groupHistograms(std::declval<Args>()...))) groupHistograms(T t, Args... args) {
+    return std::tuple_cat(std::tuple<T>(t), groupHistograms(args...));
+}
+
+template<typename DataType, typename T>
+static std::tuple<T> getNumericHistogram(T t) {
+    return std::tuple<phys_tools::histograms::histogram<T::dimensions>, DataType>(phys_tools::histograms::histogram<T::dimensions, DataType>());
+}
+
+template<typename DataType, typename T, typename... Args>
+static decltype(std::tuple_cat(std::declval<T>(), getNumericHistogram(std::declval<Args>()...))) getNumericHistogram(T t, Args... args) {
+    return std::tuple_cat(std::tuple<phys_tools::histograms::histogram<T::dimensions>, DataType>(phys_tools::histograms::histogram<T::dimensions, DataType>()),
+            getNumericHistogram<DataType>(args...));
+}
+
+// ############
+// Check that tuple is all a particular type
+template <typename T, typename HistogramSet>
+struct tuple_is_type;
+
+template <typename T, typename U, typename... Ts>
+struct tuple_is_type<T, std::tuple<U, Ts...> > : std::false_type {};
+
+template <typename T>
+struct tuple_is_type<T, std::tuple<T> > : std::true_type {};
+
+template <typename T, typename... Ts>
+struct tuple_is_type<T, std::tuple<T, Ts...>> : tuple_is_type<T, std::tuple<Ts...>> {};
+// ############
+
+// ############
+// Check if a histogram is completely filled by a particular type
+template <typename T, typename HistogramSet>
+struct hist_is_type;
+
+template <typename T>
+struct hist_is_type<T, std::tuple<>> : std::true_type {};
+
+template <typename T, typename UDim, typename U>
+struct hist_is_type<T, phys_tools::histograms::histogram<UDim, U> > : std::false_type {};
+
+template <typename T, typename UDim>
+struct hist_is_type<T, phys_tools::histograms::histogram<UDim, T> > : std::true_type {};
+
+template <typename T, typename UDim, typename U>
+struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, U> > > : std::false_type {};
+
+template <typename T, typename UDim>
+struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, T> > > : std::true_type {};
+
+template <typename T, typename UDim, typename U, typename... Ts>
+struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, U>, Ts...>> : std::false_type {};
+
+template <typename T, typename UDim, typename... Ts>
+struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, T>, Ts...>> : hist_is_type<T, std::tuple<Ts...>> {};
+// ############
+
+// ############
+// Check if a histogram is filled with the same type
+template <typename HistogramSet>
+struct hist_is_consistent;
+
+template <typename UDim, typename U>
+struct hist_is_consistent<phys_tools::histograms::histogram<UDim, U> > : std::true_type {};
+
+template <typename UDim, typename U, typename... Ts>
+struct hist_is_consistent<std::tuple<phys_tools::histograms::histogram<UDim, U>, Ts...>> : hist_is_type<U, std::tuple<Ts...>> {};
+// ############
+
+// ############
+// Get the type contained in a histogram
+template <typename UDim, typename U>
+struct _hist_type_extractor<phys_tools::histograms::histogram<UDim, U> > {
+    typedef U type;
+};
+
+template <typename UDim, typename U, typename... Ts>
+struct _hist_type_extractor<std::tuple<phys_tools::histograms::histogram<UDim, U>, Ts...>> {
+    typedef U type;
+};
+
+template <typename HistogramSet>
+struct hist_type {
+    typedef typename _hist_type_extractor<HistogramSet>::type type;
+    static_assert(hist_is_consistent<HistogramSet>::value);
+};
+// ############
+
+
+// ############
+// Convert the type of a histogram
+template <typename T, typename prev, typename HistogramSet>
+struct _hist_converter;
+
+template <typename T, typename prev, typename UDim, typename U>
+struct _hist_converter<T, prev, phys_tools::histograms::histogram<UDim, U> > {
+    typedef typename phys_tools::histograms::histogram<UDim, T> type;
+};
+
+template <typename T, typename prev, typename UDim, typename U>
+struct _hist_converter<T, prev, std::tuple<phys_tools::histograms::histogram<UDim, U>>> {
+    typedef typename decltype(std::tuple_cat(std::declval<prev>, std::declval<std::tuple<phys_tools::histograms::histogram<UDim, T>>>())) type;
+};
+
+template <typename T, typename prev, typename UDim, typename U, typename... Ts>
+struct _hist_converter<T, prev, std::tuple<phys_tools::histograms::histogram<UDim, U>, Ts...>> :
+_hist_converter<T, decltype(std::tuple_cat(std::declval<prev>, std::declval<std::tuple<phys_tools::histograms::histogram<UDim, T>>>())), Ts...> {};
+
+template <typename T, typename HistogramSet>
+struct hist_converter;
+
+template <typename T, typename HistogramSet>
+struct hist_converter<T, HistogramSet> : _hist_converter<T, std::tuple<>, HistogramSet> {
+    static_assert(hist_is_consistent<HistogramSet>::value);
+};
+// ############
+
+template<typename HistogramSet, typename F>
+auto convert_histogram_set(HistogramSet hs, F f) {
+    typedef typename hist_type<HistogramSet>::type InputType;
+    typedef decltype(f(std::declval<InputType>())) OutputType;
+    typedef typename hist_converter<OutputType, HistogramSet> HistOutputType;
+}
+
+}
+
 namespace golem {
 
 template<typename PhysicsModel_,typename Likelihood_>
@@ -128,7 +262,7 @@ public:
 
     template<typename DataType, typename T, typename... Args>
     static decltype(std::tuple_cat(std::declval<T>(), getNumericHistogram(std::declval<Args>()...))) getNumericHistogram(T t, Args... args) {
-        return std::tuple_cat(std::tuple<phys_tools::histograms::histogram<T::dimensions>, DataType>(phys_tools::histograms::histogram<T::dimensions, DataType>()),
+        return std::tuple_cat(std::tuple<phys_tools::histograms::histogram<T::dimensions, DataType>>(phys_tools::histograms::histogram<T::dimensions, DataType>()),
                 getNumericHistogram<DataType>(args...));
     }
 
