@@ -55,23 +55,23 @@ struct hist_is_type;
 template <typename T>
 struct hist_is_type<T, std::tuple<>> : std::true_type {};
 
-template <typename T, typename UDim, typename U>
+template <typename T, int UDim, typename U>
 struct hist_is_type<T, phys_tools::histograms::histogram<UDim, U> > : std::false_type {};
 
-template <typename T, typename UDim>
+template <typename T, int UDim>
 struct hist_is_type<T, phys_tools::histograms::histogram<UDim, T> > : std::true_type {};
 
-template <typename T, typename UDim, typename U>
+template <typename T, int UDim, typename U>
 struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, U> > > : std::false_type {};
 
-template <typename T, typename UDim>
+template <typename T, int UDim>
 struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, T> > > : std::true_type {};
 
-template <typename T, typename UDim, typename U, typename... Ts>
-struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, U>, Ts...>> : std::false_type {};
+template <typename T, int UDim, typename U, typename... Ts>
+struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, U>, Ts...> > : std::false_type {};
 
-template <typename T, typename UDim, typename... Ts>
-struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, T>, Ts...>> : hist_is_type<T, std::tuple<Ts...>> {};
+template <typename T, int UDim, typename... Ts>
+struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, T>, Ts...> > : hist_is_type<T, std::tuple<Ts...>> {};
 // ############
 
 // ############
@@ -79,21 +79,24 @@ struct hist_is_type<T, std::tuple<phys_tools::histograms::histogram<UDim, T>, Ts
 template <typename HistogramSet>
 struct hist_is_consistent;
 
-template <typename UDim, typename U>
+template <int UDim, typename U>
 struct hist_is_consistent<phys_tools::histograms::histogram<UDim, U> > : std::true_type {};
 
-template <typename UDim, typename U, typename... Ts>
+template <int UDim, typename U, typename... Ts>
 struct hist_is_consistent<std::tuple<phys_tools::histograms::histogram<UDim, U>, Ts...>> : hist_is_type<U, std::tuple<Ts...>> {};
 // ############
 
 // ############
 // Get the type contained in a histogram
-template <typename UDim, typename U>
+template <typename HistogramSet>
+struct _hist_type_extractor;
+
+template <int UDim, typename U>
 struct _hist_type_extractor<phys_tools::histograms::histogram<UDim, U> > {
     typedef U type;
 };
 
-template <typename UDim, typename U, typename... Ts>
+template <int UDim, typename U, typename... Ts>
 struct _hist_type_extractor<std::tuple<phys_tools::histograms::histogram<UDim, U>, Ts...>> {
     typedef U type;
 };
@@ -111,34 +114,38 @@ struct hist_type {
 template <typename T, typename prev, typename HistogramSet>
 struct _hist_converter;
 
-template <typename T, typename prev, typename UDim, typename U>
+template <typename T, typename prev, int UDim, typename U>
 struct _hist_converter<T, prev, phys_tools::histograms::histogram<UDim, U> > {
     typedef typename phys_tools::histograms::histogram<UDim, T> type;
 };
 
-template <typename T, typename prev, typename UDim, typename U>
+template <typename T, typename prev, int UDim, typename U>
 struct _hist_converter<T, prev, std::tuple<phys_tools::histograms::histogram<UDim, U>>> {
-    typedef typename decltype(std::tuple_cat(std::declval<prev>, std::declval<std::tuple<phys_tools::histograms::histogram<UDim, T>>>())) type;
+    typedef decltype(std::tuple_cat(std::declval<prev>, std::declval<std::tuple<phys_tools::histograms::histogram<UDim, T>>>())) type;
 };
 
-template <typename T, typename prev, typename UDim, typename U, typename... Ts>
+template <typename T, typename prev, int UDim, typename U, typename... Ts>
 struct _hist_converter<T, prev, std::tuple<phys_tools::histograms::histogram<UDim, U>, Ts...>> :
 _hist_converter<T, decltype(std::tuple_cat(std::declval<prev>, std::declval<std::tuple<phys_tools::histograms::histogram<UDim, T>>>())), Ts...> {};
 
-template <typename T, typename HistogramSet>
-struct hist_converter;
 
 template <typename T, typename HistogramSet>
-struct hist_converter<T, HistogramSet> : _hist_converter<T, std::tuple<>, HistogramSet> {
+struct hist_converter: _hist_converter<T, std::tuple<>, HistogramSet> {
     static_assert(hist_is_consistent<HistogramSet>::value);
 };
 // ############
 
+// ############
+// Apply function to convert histogram type
+
+// ############
+
 template<typename HistogramSet, typename F>
-auto convert_histogram_set(HistogramSet hs, F f) {
+hist_converter<decltype(f(std::declval<hist_type<HistogramSet>::type>())), HistogramSet> convert_histogram_set(HistogramSet hs, F f) {
     typedef typename hist_type<HistogramSet>::type InputType;
     typedef decltype(f(std::declval<InputType>())) OutputType;
-    typedef typename hist_converter<OutputType, HistogramSet> HistOutputType;
+    typedef hist_converter<OutputType, HistogramSet> HistOutputType;
+
 }
 
 }
@@ -154,10 +161,11 @@ class Golem {
     typedef typename PhysicsModel::UncertaintyWeighter UncertaintyWeighter;
     typedef typename PhysicsModel::HistogramSet HistogramSet;
     typedef typename PhysicsModel::Prior Prior;
+    typedef decltype(std::declval<WeighterMaker>()(std::declval<phys_tools::ParameterSet>().getParameterValues())) Weighter;
 
     static constexpr unsigned int NParameters = PhysicsModel::NParameters;
 
-    typedef phys_tools::likelihood::detail::SwitchableWeighter<phys_tools::likelihood::simpleDataWeighter, decltype(std::declval<WeighterMaker>()(std::declval<std::vector<double>>()))> DataWeighter;
+    typedef phys_tools::likelihood::detail::SwitchableAsimovWeighterConstructor<double, Event, phys_tools::likelihood::simpleDataWeighterConstructor, phys_tools::likelihood::asimovDataWeighterConstructor<Weighter, double>> DataWeighter;
 
     typedef phys_tools::likelihood::LikelihoodProblem<std::reference_wrapper<const Event>, HistogramSet, DataWeighter, phys_tools::likelihood::detail::WeighterCollection<WeighterMaker, UncertaintyWeighter>, Prior, Likelihood, NParameters> LType;
 
@@ -286,11 +294,12 @@ public:
         if(simulation.empty())
             throw std::runtime_error("Simulation cannot be empty for Asimov test.");
         // make the weighter for parameters
-        auto weighter = WM(parameters);
+        Weighter weighter = WM(parameters);
 
         // Set the asimov weighter
         likelihoodProblem.dataWeighter.setWeighter(asimovWeighterIndex);
-        std::get<asimovWeighterIndex>(likelihoodProblem.dataWeighter.implementations) = weighter;
+        //std::get<asimovWeighterIndex>(likelihoodProblem.dataWeighter.implementations) = weighter;
+        std::get<asimovWeighterIndex>(likelihoodProblem.dataWeighter.implementations).setAsimovWeighter(weighter);
 
         // overwrite the observation in the Golem
         observation = simulation;
@@ -333,7 +342,7 @@ private:
                     {simulationHistogram},
                     prior,
                     {0.0},
-                    DataWeighter(phys_tools::likelihood::detail::SwitchableWeighter<phys_tools::likelihood::simpleDataWeighter, decltype(WM(std::declval<std::vector<double>>()))>(phys_tools::likelihood::simpleDataWeighter(), WM(params.getParameterValues()))),
+                    DataWeighter(phys_tools::likelihood::detail::SwitchableAsimovWeighterConstructor<double, Event, phys_tools::likelihood::simpleDataWeighterConstructor, phys_tools::likelihood::asimovDataWeighterConstructor<Weighter, double>>(phys_tools::likelihood::simpleDataWeighterConstructor(), phys_tools::likelihood::asimovDataWeighterConstructor<Weighter, double>(WM(params.getParameterValues())))),
                     WC,
                     Likelihood(),
                     params.getParameterValues()
